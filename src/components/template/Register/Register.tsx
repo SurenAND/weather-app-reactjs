@@ -1,7 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import Loading from "../../Loading/Loading";
-import { routes } from "../../../const/routes";
+import { routes } from "../../../constants/routes";
 const SignUpTemplate = lazy(() => import("./SignUp/SignUp"));
 const LogInTemplate = lazy(() => import("./LogIn/LogIn"));
 

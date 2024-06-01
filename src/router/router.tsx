@@ -1,7 +1,8 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
-import { routes } from "../const/routes";
+import { routes } from "../constants/routes";
 import { Suspense, lazy } from "react";
 import Loading from "../components/Loading/Loading";
+import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 
 const HomePage = lazy(() => import("../pages/Home/Home"));
 const RegisterPage = lazy(() => import("../pages/Register/Register"));
@@ -11,9 +12,11 @@ export const router = createBrowserRouter([
   {
     path: routes.HOME_PAGE,
     element: (
-      <Suspense fallback={<Loading />}>
-        <HomePage />
-      </Suspense>
+      <ProtectedRoute>
+        <Suspense fallback={<Loading />}>
+          <HomePage />
+        </Suspense>
+      </ProtectedRoute>
     ),
   },
   {
