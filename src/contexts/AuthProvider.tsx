@@ -25,7 +25,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 }
 
 const token = getFromLocalStorage("token");
-const username = getFromLocalStorage("username");
+const username = getFromLocalStorage("userName");
 
 const authInit = {
   isLogin: token ? true : false,
