@@ -19,6 +19,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLogin: action.payload.isLogin,
         username: action.payload.username,
       };
+    case AuthReducerAction.LOG_OUT:
+      return {
+        isLogin: action.payload.isLogin,
+        username: action.payload.username,
+      };
     default:
       return state;
   }
