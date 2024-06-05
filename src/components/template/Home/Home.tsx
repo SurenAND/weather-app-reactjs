@@ -9,9 +9,13 @@ import TimeAndLocation from "./TimeAndLocation/TimeAndLocation";
 import TempAndDetails from "./TempAndDetails/TempAndDetails";
 import Forecast from "./Forecast/Forecast";
 import getFormattedWeatherData from "../../../services/getWeather";
-import { WeatherData } from "../../../types/types";
+import { WeatherData, recentSearch } from "../../../types/types";
 import { AuthReducerAction } from "../../../types/enums";
-import { removeFromLocalStorage } from "../../../lib/helper";
+import {
+  capitalizeFirstLetter,
+  getFromLocalStorage,
+  removeFromLocalStorage,
+} from "../../../lib/helper";
 
 export default function HomeTemplate() {
   const { state, dispatch } = useAuth();
@@ -25,29 +29,42 @@ export default function HomeTemplate() {
     });
   };
 
-  const [isLoading, setIsLoading] = useState(true);
-
   // weather states
   const [query, setQuery] = useState("?q=tehran");
   const [units, setUnits] = useState("metric");
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [recentSearches, setRecentSearches] = useState<recentSearch[]>([]);
 
   // getting data
   const getWeather = async () => {
-    setIsLoading(true);
-    const data = await getFormattedWeatherData({ query, units });
-    setWeather(data);
-    setIsLoading(false);
+    toast.promise(getFormattedWeatherData({ query, units }), {
+      position: "top-right",
+      loading: `Fetching weather for ${capitalizeFirstLetter(
+        query.split("=")[1]
+      )}`,
+      success: (data) => {
+        setWeather(data);
+        return `Fetched weather for ${data.name}, ${data.country}`;
+      },
+      error: "City not found!",
+    });
   };
 
   // useEffects
   useEffect(() => {
-    toast.success(`Welcome ${state.username}`);
+    toast.success(`Welcome ${state.username}`, { position: "top-left" });
   }, [state.username]);
 
   useEffect(() => {
     getWeather();
   }, [query, units]);
+
+  useEffect(() => {
+    const rsFromLocalStorage = getFromLocalStorage("recentSearches");
+    if (rsFromLocalStorage) {
+      setRecentSearches(JSON.parse(rsFromLocalStorage));
+    }
+  }, []);
 
   return (
     <Box my={4}>
@@ -77,25 +94,20 @@ export default function HomeTemplate() {
             "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
         }}
       >
-        <RecentSearch setQuery={setQuery} />
-        <SearchInput setQuery={setQuery} setUnits={setUnits} />
-        {isLoading ? (
-          <Typography
-            textAlign="center"
-            variant="h6"
-            sx={{ mt: 4, color: "white" }}
-          >
-            Loading...
-          </Typography>
-        ) : (
-          weather && (
-            <>
-              <TimeAndLocation {...weather} />
-              <TempAndDetails weather={weather} units={units} />
-              <Forecast title="3 hour step forecast" data={weather.hourly} />
-              <Forecast title="daily forecast" data={weather.daily} />
-            </>
-          )
+        <RecentSearch recentSearches={recentSearches} setQuery={setQuery} />
+        <SearchInput
+          setRecentSearches={setRecentSearches}
+          setQuery={setQuery}
+          setUnits={setUnits}
+        />
+
+        {weather && (
+          <>
+            <TimeAndLocation {...weather} />
+            <TempAndDetails weather={weather} units={units} />
+            <Forecast title="3 hour step forecast" data={weather.hourly} />
+            <Forecast title="daily forecast" data={weather.daily} />
+          </>
         )}
       </Box>
 
