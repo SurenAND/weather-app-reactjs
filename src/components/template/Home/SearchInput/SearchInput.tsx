@@ -7,12 +7,19 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { BiCurrentLocation, BiSearch } from "react-icons/bi";
-import { getCity } from "../../../../lib/gecoder";
+import { recentSearch } from "../../../../types/types";
+import {
+  generate_token,
+  getFromLocalStorage,
+  setToLocalStorage,
+} from "../../../../lib/helper";
 
 export default function SearchInput({
+  setRecentSearches,
   setQuery,
   setUnits,
 }: {
+  setRecentSearches: React.Dispatch<React.SetStateAction<recentSearch[]>>;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
   setUnits: React.Dispatch<React.SetStateAction<string>>;
 }) {
@@ -20,20 +27,34 @@ export default function SearchInput({
 
   const handleSearch = () => {
     if (city !== "") {
+      handleRecentSearch(city);
       setQuery(`?q=${city}`);
     }
   };
 
-  const handleLocationClick = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        console.log(latitude, longitude);
-        // getCity(latitude, longitude);
-        // const city = getCity(latitude, longitude);
-        // setQuery(`?q=${city}`);
-      });
+  const handleRecentSearch = (city: string) => {
+    const newRecentSearch = {
+      id: generate_token(3),
+      search: city,
+    };
+    setRecentSearches((prev) => [newRecentSearch, ...(prev || [])]);
+    const rsFromLocalStorage = getFromLocalStorage("recentSearches");
+    const recentSearches = JSON.parse(rsFromLocalStorage!);
+    if (recentSearches && recentSearches.length > 3) {
+      recentSearches.shift();
     }
+    setToLocalStorage(
+      "recentSearches",
+      JSON.stringify(
+        recentSearches
+          ? [...recentSearches, newRecentSearch]
+          : [newRecentSearch]
+      )
+    );
+  };
+
+  const handleLocationClick = () => {
+    setQuery(`?q=mashhad`);
   };
 
   return (
@@ -91,6 +112,7 @@ export default function SearchInput({
         textAlign="center"
       >
         <Button
+          disableRipple
           sx={{
             justifyContent: "end",
             fontSize: 24,
@@ -109,6 +131,7 @@ export default function SearchInput({
           |
         </Typography>
         <Button
+          disableRipple
           sx={{
             justifyContent: "start",
             fontSize: 24,
